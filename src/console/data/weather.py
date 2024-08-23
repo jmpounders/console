@@ -7,16 +7,17 @@ import zoneinfo as zi
 import openmeteo_requests
 
 from requests import Session
-# import requests_cache
+import requests_cache
 from retry_requests import retry
 
 from console.data.source import DataSource
+from console.data.utils import pad
 
 
 REFRESH_RATE = 10
 
-# CACHE_DIR = '.cache'
-# CACHE_EXPIRE = 3600
+CACHE_DIR = '.cache'
+CACHE_EXPIRE = 3600
 RETRIES = 5
 BACKOFF_FACTOR = 0.2
 
@@ -47,25 +48,25 @@ CURRENT_VARIABLES = [
 	"wind_gusts_10m"
 ]
 DATA_LABELS = {
-	'temperature_2m': 'Temperature (°F)',
-	'relative_humidity_2m': 'Relative Humidity (%)',
-	'dew_point_2m': 'Dew Point (°F)',
-	'apparent_temperature': 'Apparent Temperature (°F)',
-	'precipitation_probability': 'Precipitation Probability (%)',
-	'surface_pressure': 'Surface Pressure (hPa)',
-	'cloud_cover': 'Cloud Cover (%)',
-	'visibility': 'Visibility (m)',
-	'wind_speed_10m': 'Wind Speed (mph)',
-	'wind_gusts_10m': 'Wind Gusts (mph)',
-	'wind_direction_10m': 'Wind Direction (°)',
-	'pressure_msl': 'Pressure MSL (hPa)',
+	'temperature_2m': 'Temp [F]',
+	'relative_humidity_2m': 'Rel Hum [%]',
+	'dew_point_2m': 'Dew Point [F]',
+	'apparent_temperature': 'App Temp [F]',
+	'precipitation_probability': 'Precip Prob [%]',
+	'surface_pressure': 'Press Surf [hPa]',
+    'pressure_msl': 'Press MSL [hPa]',
+	'cloud_cover': 'Cloud Cover [%]',
+	'visibility': 'Visibility [m]',
+	'wind_speed_10m': 'Wind Speed [mph]',
+	'wind_gusts_10m': 'Wind Gusts [mph]',
+	'wind_direction_10m': 'Wind Dir [deg]',
 }
 
 
-def request_weather_data() -> dict[str, Any]:
+def request_data() -> dict[str, Any]:
     # Setup the Open-Meteo API client with cache and retry on error
-    # cache_session = requests_cache.CachedSession(CACHE_DIR, expire_after = CACHE_EXPIRE)
-    retry_session = retry(Session(), retries = RETRIES, backoff_factor = BACKOFF_FACTOR)
+    cache_session = requests_cache.CachedSession(CACHE_DIR, expire_after = CACHE_EXPIRE)
+    retry_session = retry(cache_session, retries = RETRIES, backoff_factor = BACKOFF_FACTOR)
     openmeteo = openmeteo_requests.Client(session = retry_session)
 
     # The order of variables in hourly or daily is important to assign them correctly below
@@ -84,10 +85,10 @@ def request_weather_data() -> dict[str, Any]:
     output = {}
 
     # Process first location. Add a for-loop for multiple locations or weather models
-    print(f"Coordinates {response.Latitude()}°N {response.Longitude()}°E")
-    print(f"Elevation {response.Elevation()} m asl")
-    print(f"Timezone {response.Timezone()} {response.TimezoneAbbreviation()}")
-    print(f"Timezone difference to GMT+0 {response.UtcOffsetSeconds()} s")
+    # print(f"Coordinates {response.Latitude()}°N {response.Longitude()}°E")
+    # print(f"Elevation {response.Elevation()} m asl")
+    # print(f"Timezone {response.Timezone()} {response.TimezoneAbbreviation()}")
+    # print(f"Timezone difference to GMT+0 {response.UtcOffsetSeconds()} s")
 
     # Current values
     output['current'] = {}
@@ -114,4 +115,8 @@ def request_weather_data() -> dict[str, Any]:
 
 
 def make_data_source() -> DataSource:
-    return DataSource("weather", request_weather_data, REFRESH_RATE)
+    return DataSource("weather", request_data, REFRESH_RATE)
+
+
+def present_data(data: dict[str, float]) -> list[str]:
+    return [pad(key, value, 30) for key, value in data.items()]

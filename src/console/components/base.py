@@ -111,6 +111,72 @@ class Text(Component):
         return self.surface
 
 
+class LinePlot(Component):
+
+    def __init__(
+            self,
+            width: int,
+            height: int,
+            x_data: list[float],
+            y_data: list[float],
+            bg_color: int,
+            fg_color: int,
+            padding: int,
+            x_max: float | None = None,
+        ):
+        super().__init__(width, height)
+        self.x_data = x_data
+        self.y_data = y_data
+        self.fg_color = fg_color
+
+        self.surface = pygame.Surface((width, height))
+        self.surface.fill(pygame.Color(bg_color))
+
+        self.x0, self.y0 = padding, padding
+        self.x1, self.y1 = width-padding, height-padding
+        self.x_max, self.y_max = x_max if x_max is not None else max(x_data), max(y_data)
+        self.x_min, self.y_min = min(x_data), min(y_data)
+
+        y_mean = sum(y_data) / len(y_data)
+        y_mean_scaled = self.__scale_y(y_mean)
+
+        self.__draw_axes(y_mean_scaled)
+        self.__draw_data(x_data, y_data)
+
+    def __scale_x(self, x: float):
+        return (x - self.x_min) / (self.x_max - self.x_min) * (self.x1 - self.x0) + self.x0
+
+    def __scale_y(self, y: float):
+        return -(y - self.y_min) / (self.y_max - self.y_min) * (self.y1 - self.y0) + self.y1
+
+    def __draw_axes(self, y_location: float):
+        pygame.draw.line(
+            self.surface,
+            pygame.Color(self.fg_color),
+            (self.x0, self.y0),
+            (self.x0, self.y1),
+            1
+        )
+        pygame.draw.line(
+            self.surface,
+            pygame.Color(self.fg_color),
+            (self.x0, y_location),
+            (self.x1, y_location),
+            1
+        )
+
+    def __draw_data(self, x_data: list[float], y_data: list[float]):
+        px0, py0 = self.__scale_x(x_data[0]), self.__scale_y(y_data[0])
+        for xi, yi in zip(x_data[1:], y_data[1:]):
+            px = self.__scale_x(xi)
+            py = self.__scale_y(yi)
+            pygame.draw.line(self.surface, pygame.Color(self.fg_color), (px0, py0), (px, py), 1)
+            px0, py0 = px, py
+
+    def get_surface(self):
+        return self.surface
+
+
 class Image(Component):
 
     def __init__(self, image_surface: pygame.Surface):

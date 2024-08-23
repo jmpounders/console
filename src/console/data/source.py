@@ -20,10 +20,7 @@ class DataSource:
     def update(self):
         needs_refresh = (dt.datetime.now(dt.UTC) - self.last_update).seconds > self.refresh_frequency
         if self.data is None or needs_refresh:
-            print('Refreshing data')
             self.data = self.request_func()
             self.last_update = dt.datetime.now(dt.UTC)
-        else:
-            print('Using cached data')
 
         return self.data
