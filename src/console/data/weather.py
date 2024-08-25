@@ -4,22 +4,15 @@ from typing import Any
 import datetime as dt
 import zoneinfo as zi
 
-import openmeteo_requests
+from openmeteo_sdk.WeatherApiResponse import WeatherApiResponse
 
-from requests import Session
-import requests_cache
-from retry_requests import retry
+import httpx
 
 from console.data.source import DataSource
 from console.data.utils import pad
 
 
-REFRESH_RATE = 10
-
-CACHE_DIR = '.cache'
-CACHE_EXPIRE = 3600
-RETRIES = 5
-BACKOFF_FACTOR = 0.2
+REFRESH_RATE = 100
 
 LAT, LONG = 32.038537, -81.09347
 TIMEZONE = 'US/Eastern'
@@ -62,12 +55,32 @@ DATA_LABELS = {
 	'wind_direction_10m': 'Wind Dir [deg]',
 }
 
+def weather_api(url: str, params: any) -> list[WeatherApiResponse]:
+    params["format"] = "flatbuffers"
+
+    response = httpx.get(url, params=params)
+
+    if response.status_code in [400, 429]:
+        response_body = response.json()
+        raise Exception(response_body)
+
+    response.raise_for_status()
+
+    data = response.content
+    messages = []
+    total = len(data)
+    pos = int(0)
+    while pos < total:
+        length = int.from_bytes(data[pos : pos + 4], byteorder="little")
+        message = WeatherApiResponse.GetRootAs(data, pos + 4)
+        messages.append(message)
+        pos += length + 4
+
+    return messages
+
 
 def request_data() -> dict[str, Any]:
     # Setup the Open-Meteo API client with cache and retry on error
-    cache_session = requests_cache.CachedSession(CACHE_DIR, expire_after = CACHE_EXPIRE)
-    retry_session = retry(cache_session, retries = RETRIES, backoff_factor = BACKOFF_FACTOR)
-    openmeteo = openmeteo_requests.Client(session = retry_session)
 
     # The order of variables in hourly or daily is important to assign them correctly below
     params = {
@@ -80,7 +93,7 @@ def request_data() -> dict[str, Any]:
         "precipitation_unit": "inch",
             "timezone": "America/New_York"
         }
-    response = openmeteo.weather_api(BASE_URL, params=params)[0]
+    response = weather_api(BASE_URL, params=params)[0]
 
     output = {}
 
@@ -115,7 +128,11 @@ def request_data() -> dict[str, Any]:
 
 
 def make_data_source() -> DataSource:
-    return DataSource("weather", request_data, REFRESH_RATE)
+    default = {
+        'current': {key: 'NULL' for key in DATA_LABELS.values()},
+        'hourly': {key: 'NULL' for key in DATA_LABELS.values()}
+    }
+    return DataSource("weather", request_data, REFRESH_RATE, default)
 
 
 def present_data(data: dict[str, float]) -> list[str]:

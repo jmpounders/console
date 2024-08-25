@@ -2,15 +2,14 @@
 
 from typing import Any
 
-from requests import Session
-from retry_requests import retry
+import httpx
+# from requests import Session
+# from retry_requests import retry
 
 from console.data.source import DataSource
 from console.data.utils import pad
 
 REFRESH_RATE = 10
-RETRIES = 5
-BACKOFF_FACTOR = 0.2
 
 SERIAL_NO = '404cca6b9fd4'
 BASE_URL = f'http://airgradient_{SERIAL_NO}.local'
@@ -58,9 +57,7 @@ DATA_LABELS = {
 }
 
 def request_data() -> dict[str, Any]:
-    retry_session = retry(Session(), retries = RETRIES, backoff_factor = BACKOFF_FACTOR)
-
-    response = retry_session.get(BASE_URL + '/measures/current')
+    response = httpx.get(BASE_URL + '/measures/current')
 
     output = {}
     for variable in VARIABLES:
@@ -70,7 +67,8 @@ def request_data() -> dict[str, Any]:
 
 
 def make_data_source() -> DataSource:
-    return DataSource("airgradient", request_data, REFRESH_RATE)
+    default = {DATA_LABELS[variable]: 'NULL' for variable in VARIABLES}
+    return DataSource("airgradient", request_data, REFRESH_RATE, default)
 
 
 def present_data(data: dict[str, Any]) -> list[str]:

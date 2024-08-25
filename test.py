@@ -77,7 +77,7 @@ while running:
     }
     data_fields = [
         Text(item, **params)
-        for item in weather.present_data(weather_data['current'])
+        for item in weather.present_data(weather_data.get('current', {}))
     ]
 
     vstack = VStack(data_fields, BLACK, 10)
