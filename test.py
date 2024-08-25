@@ -14,6 +14,7 @@ WIDTH, HEIGHT = 1920, 1080
 
 GREEN = 0x0abdc6ff
 BLACK = 0x091833ff
+RED = 0xff0000ff
 
 # print(pygame.font.get_fonts())
 
@@ -63,6 +64,17 @@ while running:
     # Make clock
     params['font_size'] = 24
     date = Text(datetime.now().strftime('%Y-%m-%d %I:%M:%S'), **params)
+
+    # Show data source statuses
+    data_source_status = [
+        weather_data_source.status,
+        iaq_data_source.status,
+    ]
+    status_surface = pygame.Surface((len(data_source_status) * 30, 30))
+    status_surface.fill(color_bg)
+    for i, status in enumerate(data_source_status):
+        color = pygame.Color(GREEN) if status == 'idle' else pygame.Color(RED)
+        indicaor = pygame.draw.rect(status_surface, color, (5 + 30 * i, 5, 20, 20))
 
     # Offset to start of main dashboard
     origin_y = title.height + 10
@@ -129,6 +141,7 @@ while running:
 
     screen.blit(title.get_surface(), (origin_x, 10))
     screen.blit(date.get_surface(), (WIDTH-10-date.width, 10))
+    screen.blit(status_surface, (WIDTH-status_surface.get_width()-10, date.height + 10))
     screen.blit(container_weather.get_surface(), (origin_x, origin_y))
     screen.blit(container_iaq.get_surface(), (origin_x, origin_y + container_weather.height + 10))
     screen.blit(plot.get_surface(), (WIDTH - 700, HEIGHT - 500))

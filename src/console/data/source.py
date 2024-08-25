@@ -25,7 +25,7 @@ class DataRetriever:
         self.executor.shutdown()
 
 
-REQUEST = DataRetriever()
+REQUEST_POOL = DataRetriever()
 
 
 class DataSource:
@@ -49,12 +49,12 @@ class DataSource:
     def update(self):
         needs_refresh = (dt.datetime.now(dt.UTC) - self.last_update).seconds > self.refresh_frequency
         if needs_refresh and self.status == 'idle':
-            REQUEST.submit(self.name, self.request_func)
+            REQUEST_POOL.submit(self.name, self.request_func)
             self.status = 'pending'
             # self.data = self.request_func()
 
         if self.status == 'pending':
-            response = REQUEST.get_result(self.name)
+            response = REQUEST_POOL.get_result(self.name)
             if response is not None:
                 self.data = response
                 self.last_update = dt.datetime.now(dt.UTC)
