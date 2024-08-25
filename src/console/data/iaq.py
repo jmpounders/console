@@ -3,8 +3,6 @@
 from typing import Any
 
 import httpx
-# from requests import Session
-# from retry_requests import retry
 
 from console.data.source import DataSource
 from console.data.utils import pad

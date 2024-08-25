@@ -56,6 +56,12 @@ DATA_LABELS = {
 }
 
 def weather_api(url: str, params: any) -> list[WeatherApiResponse]:
+    """Adapted from openmeteo_requests/Client.py.
+    (https://github.com/open-meteo/python-requests/blob/main/openmeteo_requests/Client.py)
+
+    Only handles GET requests. Was adapted to get away from the requests library
+    so that we could do async requests with httpx.
+    """
     params["format"] = "flatbuffers"
 
     response = httpx.get(url, params=params)
