@@ -2,6 +2,7 @@ from typing import Callable
 import datetime as dt
 from concurrent import futures
 
+
 class DataRetriever:
 
     def __init__(self, max_workers: int = 2):
