@@ -5,7 +5,10 @@ import numpy as np
 import pygame
 
 from console.components.base import Container, Text, VStack, Image, LinePlot
+from console.components.composite import TextInBorder, AnnotatedLinePlots
 from console.data import fake, weather, iaq
+
+# TODO
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -15,6 +18,8 @@ WIDTH, HEIGHT = 1920, 1080
 GREEN = 0x0abdc6ff
 BLACK = 0x091833ff
 RED = 0xff0000ff
+
+FPS = 4
 
 # print(pygame.font.get_fonts())
 
@@ -81,21 +86,14 @@ while running:
     origin_x = 10
 
     # Weather data
-    params = {
+    weather_data_fmt = weather.present_data(weather_data.get('current', {}))
+    text_params = {
         'font_name': '3270medium',
         'font_size': 32,
         'font_color': GREEN,
         'font_background': BLACK,
     }
-    data_fields = [
-        Text(item, **params)
-        for item in weather.present_data(weather_data.get('current', {}))
-    ]
-
-    vstack = VStack(data_fields, BLACK, 10)
-
-    # Container 1
-    params = {
+    container_params = {
         'border_thickness': 2,
         'border_radius': 10,
         'border_margin': 10,
@@ -103,57 +101,65 @@ while running:
         'background_color': BLACK,
         'child_padding': 15,
     }
-    pad_amount = 2 * (params['child_padding'] + params['border_margin'])
-    width, height = vstack.width + pad_amount, vstack.height + pad_amount
-    container_weather = Container(width, height, [vstack], **params)
-
+    container_weather = TextInBorder(weather_data_fmt, text_params, container_params)
 
     # IAQ data
-    params = {
-        'font_name': '3270medium',
-        'font_size': 32,
-        'font_color': GREEN,
-        'font_background': BLACK,
-    }
-    data_fields = [
-        Text(item, **params)
-        for item in iaq.present_data(iaq_data)
-    ]
+    iaq_data_fmt = iaq.present_data(iaq_data)
+    container_iaq = TextInBorder(iaq_data_fmt, text_params, container_params)
 
-    vstack = VStack(data_fields, BLACK, 10)
 
-    # Container 1
-    params = {
-        'border_thickness': 2,
-        'border_radius': 10,
-        'border_margin': 10,
-        'border_color': GREEN,
-        'background_color': BLACK,
-        'child_padding': 15,
-    }
-    pad_amount = 2 * (params['child_padding'] + params['border_margin'])
-    width, height = vstack.width + pad_amount, vstack.height + pad_amount
-    container_iaq = Container(width, height, [vstack], **params)
+    forecast_temp = weather_data.get('hourly', {}).get('Temp [F]', [])
+    forecast_cloud = weather_data.get('hourly', {}).get('Cloud Cover [%]', [])
+    forecast_precip = weather_data.get('hourly', {}).get('Precip Prob [%]', [])
+    forecast_wind = weather_data.get('hourly', {}).get('Wind Speed [mph]', [])
+    forecast_time_ind = list(range(len(forecast_temp)))
+    forecast_plots = AnnotatedLinePlots(
+        ['TEMP','CLCO','PREC','WIND'],
+        forecast_time_ind,
+        [forecast_temp, forecast_cloud, forecast_precip, forecast_wind],
+        text_params,
+        container_params
+    )
 
-    # xx += dt
-    plot = LinePlot(600,50, xx, yy, BLACK, GREEN, 5)
-
+    # IAQ history
+    if len(iaq_data_source.history) < 2:
+        iaq_utc_times = []
+        iaq_history = []
+    else:
+        iaq_utc_times, iaq_history = zip(*iaq_data_source.history)
+    n_points = len(iaq_utc_times)
+    temp_data = [data['Temperature [F]'] for data in iaq_history] #+ [0]*(iaq_data_source.max_history_len - n_points)
+    humidity_data = [data['Rel Hum [%]'] for data in iaq_history] #+ [0]*(iaq_data_source.max_history_len - n_points)
+    c02_data = [data['CO2 [ppm]'] for data in iaq_history] #+ [0]*(iaq_data_source.max_history_len - n_points)
+    pm25_data = [data['PM2.5 [ug/m3]'] for data in iaq_history] #+ [0]*(iaq_data_source.max_history_len - n_points)
+    tvoc_data = [data['VOC Index'] for data in iaq_history] #+ [0]*(iaq_data_source.max_history_len - n_points)
+    nox_data = [data['NOx Index'] for data in iaq_history] #+ [0]*(iaq_data_source.max_history_len - n_points)
+    iaq_plots = AnnotatedLinePlots(
+        ['TEMP', ' CO2', 'PM25', ' VOC', ' NOx'],
+        list(range(n_points)),
+        [temp_data, c02_data, pm25_data, tvoc_data, nox_data],
+        text_params,
+        container_params
+    )
 
     screen.blit(title.get_surface(), (origin_x, 10))
     screen.blit(date.get_surface(), (WIDTH-10-date.width, 10))
     screen.blit(status_surface, (WIDTH-status_surface.get_width()-10, date.height + 10))
+
     screen.blit(container_weather.get_surface(), (origin_x, origin_y))
+    screen.blit(forecast_plots.get_surface(), (origin_x + container_weather.width + 15, origin_y))
+
     screen.blit(container_iaq.get_surface(), (origin_x, origin_y + container_weather.height + 10))
-    screen.blit(plot.get_surface(), (WIDTH - 700, HEIGHT - 500))
+    screen.blit(iaq_plots.get_surface(), (origin_x + container_iaq.width + 15, origin_y + container_weather.height + 10))
 
     pygame.draw.rect(screen, color_fg, (WIDTH-100, HEIGHT-100, 100,100), 2)
 
     # flip() the display to put your work on screen
     pygame.display.flip()
 
-    # limits FPS to 30
+    # limits FPS
     # dt is delta time in seconds since last frame, used for framerate-
     # independent physics.
-    dt = clock.tick(30) / 1000
+    dt = clock.tick(FPS) / 1000
 
 pygame.quit()

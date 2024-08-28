@@ -46,6 +46,9 @@ class DataSource:
         self.data = default_data
         self.status = 'idle'
 
+        self.history = []
+        self.max_history_len = 3*24*60*60 // refresh_frequency
+
     def update(self):
         needs_refresh = (dt.datetime.now(dt.UTC) - self.last_update).seconds > self.refresh_frequency
         if needs_refresh and self.status == 'idle':
@@ -59,5 +62,9 @@ class DataSource:
                 self.data = response
                 self.last_update = dt.datetime.now(dt.UTC)
                 self.status = 'idle'
+
+                self.history.append((dt.datetime.now(dt.UTC), self.data))
+                if len(self.history) > self.max_history_len:
+                    self.history.pop(0)
 
         return self.data

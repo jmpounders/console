@@ -12,7 +12,7 @@ from console.data.source import DataSource
 from console.data.utils import pad
 
 
-REFRESH_RATE = 100
+REFRESH_RATE = 15*60
 
 LAT, LONG = 32.038537, -81.09347
 TIMEZONE = 'US/Eastern'
@@ -97,7 +97,8 @@ def request_data() -> dict[str, Any]:
         "temperature_unit": "fahrenheit",
         "wind_speed_unit": "mph",
         "precipitation_unit": "inch",
-            "timezone": "America/New_York"
+        "timezone": "America/New_York",
+        "forecast_days": 3,
         }
     response = weather_api(BASE_URL, params=params)[0]
 
@@ -124,6 +125,7 @@ def request_data() -> dict[str, Any]:
     time_end_utc = hourly.TimeEnd()
     time_interval = hourly.Interval()
     times_utc = [dt.datetime.fromtimestamp(time_start_utc + i*time_interval, tz=dt.UTC) for i in range((time_end_utc - time_start_utc) // time_interval)]
+    output['hourly']['UTC'] = times_utc
     output['hourly']['Time'] = [t.astimezone(zi.ZoneInfo(TIMEZONE)).strftime('%Y-%m-%d %I:%M:%S %p %Z') for t in times_utc]
 
     for ind,var_name in enumerate(HOURLY_VARIABLES):

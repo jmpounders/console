@@ -112,6 +112,7 @@ class Text(Component):
 
 
 class LinePlot(Component):
+    """Line plot.  Padding is added all around."""
 
     def __init__(
             self,
@@ -121,7 +122,8 @@ class LinePlot(Component):
             y_data: list[float],
             bg_color: int,
             fg_color: int,
-            padding: int,
+            x_padding: int,
+            y_padding: int,
             x_max: float | None = None,
         ):
         super().__init__(width, height)
@@ -132,22 +134,32 @@ class LinePlot(Component):
         self.surface = pygame.Surface((width, height))
         self.surface.fill(pygame.Color(bg_color))
 
-        self.x0, self.y0 = padding, padding
-        self.x1, self.y1 = width-padding, height-padding
-        self.x_max, self.y_max = x_max if x_max is not None else max(x_data), max(y_data)
-        self.x_min, self.y_min = min(x_data), min(y_data)
+        if len(x_data) == 0 or len(y_data) == 0:
+            return
 
-        y_mean = sum(y_data) / len(y_data)
-        y_mean_scaled = self.__scale_y(y_mean)
+        try:
+            self.x0, self.y0 = x_padding, y_padding
+            self.x1, self.y1 = width-x_padding, height-y_padding
+            self.x_max, self.y_max = x_max if x_max is not None else max(x_data), max(y_data)
+            self.x_min, self.y_min = min(x_data), min(y_data)
 
-        self.__draw_axes(y_mean_scaled)
-        self.__draw_data(x_data, y_data)
+            y_mean = sum(y_data) / len(y_data)
+            y_mean_scaled = self.__scale_y(y_mean)
+
+            self.__draw_axes(y_mean_scaled)
+            self.__draw_data(x_data, y_data)
+        except Exception as e:
+            pass
 
     def __scale_x(self, x: float):
-        return (x - self.x_min) / (self.x_max - self.x_min) * (self.x1 - self.x0) + self.x0
+        if self.x_max == self.x_min:
+            return self.x0
+        return int((x - self.x_min) / (self.x_max - self.x_min) * (self.x1 - self.x0) + self.x0)
 
     def __scale_y(self, y: float):
-        return -(y - self.y_min) / (self.y_max - self.y_min) * (self.y1 - self.y0) + self.y1
+        if self.y_max == self.y_min:
+            return self.y0
+        return int(-(y - self.y_min) / (self.y_max - self.y_min) * (self.y1 - self.y0) + self.y1)
 
     def __draw_axes(self, y_location: float):
         pygame.draw.line(

@@ -40,8 +40,8 @@ DATA_LABELS = {
     'pm02': 'PM2.5 [ug/m3]',
     'pm10': 'PM10 [ug/m3]',
     'pm003Count': 'PM0.3 [count/dL]',
-    'atmp': 'Uncorrected Temperature [C]',
-    'atmpCompensated': 'Temperature [C]',
+    'atmp': 'Uncorrected Temperature [F]',
+    'atmpCompensated': 'Temperature [F]',
     'rhum': 'Uncorrected Rel Hum [%]',
     'rhumCompensated': 'Rel Hum [%]',
     'tvocIndex': 'VOC Index', # Sensiron VOC Index
@@ -60,6 +60,9 @@ def request_data() -> dict[str, Any]:
     output = {}
     for variable in VARIABLES:
         output[DATA_LABELS[variable]] = response.json().get(variable, 'NULL')
+
+    # Reading is in Celsius, convert to Fahrenheit
+    output['Temperature [F]'] = output['Temperature [F]'] * 9/5 + 32
 
     return output
 
