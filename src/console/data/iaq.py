@@ -13,16 +13,16 @@ SERIAL_NO = '404cca6b9fd4'
 BASE_URL = f'http://airgradient_{SERIAL_NO}.local'
 
 VARIABLES = [
+    # 'atmp',
+    'atmpCompensated',
+    # 'rhum',
+    'rhumCompensated',
     # 'wifi',
     'rco2',
     'pm01',
     'pm02',
     'pm10',
     'pm003Count',
-    # 'atmp',
-    'atmpCompensated',
-    # 'rhum',
-    'rhumCompensated',
     'tvocIndex',
     # 'tvocRaw',
     'noxIndex',

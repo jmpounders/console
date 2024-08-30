@@ -4,11 +4,20 @@ import numpy as np
 
 import pygame
 
-from console.components.base import Container, Text, VStack, Image, LinePlot
-from console.components.composite import TextInBorder, AnnotatedLinePlots
+from console.components.base import Container, Text, Meter
+from console.components.composite import TextInBorder, AnnotatedLinePlots, SunPath
 from console.data import fake, weather, iaq
 
+
 # TODO
+# - Make components static rather than recreating each screen
+# - Add elapsed time meters
+# - Add filler
+#   - NASA API (EONET, EPIC)
+#   - Game of life
+#   - L system
+#   - Lorenz attractor
+
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -31,10 +40,31 @@ running = True
 
 color_fg, color_bg = pygame.Color(GREEN), pygame.Color(BLACK)
 
+text_params = {
+    'font_name': '3270medium',
+    'font_size': 32,
+    'font_color': GREEN,
+    'font_background': BLACK,
+}
+container_params = {
+    'border_thickness': 2,
+    'border_radius': 10,
+    'border_margin': 10,
+    'border_color': GREEN,
+    'background_color': BLACK,
+    'child_padding': 15,
+}
+
 # Setup data sources
 fake_data_source = fake.make_data_source()
 weather_data_source = weather.make_data_source()
 iaq_data_source = iaq.make_data_source()
+
+# Setup computational components
+sun_path_component = SunPath(
+    500, GREEN, BLACK, RED,
+    container_params['border_thickness'], container_params['border_radius']
+)
 
 xx = np.linspace(0, 10, 500)
 yy = np.sin(xx)
@@ -50,9 +80,7 @@ while running:
 
     # update data sources
     weather_data = weather_data_source.update()
-    # logger.debug(weather_data['current'])
     iaq_data = iaq_data_source.update()
-    # logger.debug(iaq_data)
 
     # fill the screen with a color to wipe away anything from last frame
     screen.fill(color_bg)
@@ -64,7 +92,7 @@ while running:
         'font_color': GREEN,
         'font_background': BLACK,
     }
-    title = Text('TITLE CARD', **params)
+    title = Text('SHED DASHBOARD 082824', **params)
 
     # Make clock
     params['font_size'] = 24
@@ -87,27 +115,9 @@ while running:
 
     # Weather data
     weather_data_fmt = weather.present_data(weather_data.get('current', {}))
-    text_params = {
-        'font_name': '3270medium',
-        'font_size': 32,
-        'font_color': GREEN,
-        'font_background': BLACK,
-    }
-    container_params = {
-        'border_thickness': 2,
-        'border_radius': 10,
-        'border_margin': 10,
-        'border_color': GREEN,
-        'background_color': BLACK,
-        'child_padding': 15,
-    }
     container_weather = TextInBorder(weather_data_fmt, text_params, container_params)
 
-    # IAQ data
-    iaq_data_fmt = iaq.present_data(iaq_data)
-    container_iaq = TextInBorder(iaq_data_fmt, text_params, container_params)
-
-
+    # Weather forecast
     forecast_temp = weather_data.get('hourly', {}).get('Temp [F]', [])
     forecast_cloud = weather_data.get('hourly', {}).get('Cloud Cover [%]', [])
     forecast_precip = weather_data.get('hourly', {}).get('Precip Prob [%]', [])
@@ -120,6 +130,10 @@ while running:
         text_params,
         container_params
     )
+
+    # IAQ data
+    iaq_data_fmt = iaq.present_data(iaq_data)
+    container_iaq = TextInBorder(iaq_data_fmt, text_params, container_params)
 
     # IAQ history
     if len(iaq_data_source.history) < 2:
@@ -142,15 +156,73 @@ while running:
         container_params
     )
 
-    screen.blit(title.get_surface(), (origin_x, 10))
-    screen.blit(date.get_surface(), (WIDTH-10-date.width, 10))
-    screen.blit(status_surface, (WIDTH-status_surface.get_width()-10, date.height + 10))
+    # Elapsed time meters
+    now = datetime.now()
 
-    screen.blit(container_weather.get_surface(), (origin_x, origin_y))
-    screen.blit(forecast_plots.get_surface(), (origin_x + container_weather.width + 15, origin_y))
+    time_elapsed = now - datetime(now.year, 1, 1)
+    fraction_elapsed_year = time_elapsed.total_seconds() / (60*60*24*365)
 
-    screen.blit(container_iaq.get_surface(), (origin_x, origin_y + container_weather.height + 10))
-    screen.blit(iaq_plots.get_surface(), (origin_x + container_iaq.width + 15, origin_y + container_weather.height + 10))
+    time_elapsed = now - datetime(now.year, now.month, 1)
+    fraction_elapsed_month = time_elapsed.total_seconds() / (60*60*24*30)
+
+    time_elapsed = now - datetime(now.year, now.month, now.day)
+    fraction_elapsed_day = time_elapsed.total_seconds() / (60*60*24)
+
+    pad = 10
+    width = 10
+    height = HEIGHT - origin_y - 20
+    meter_day = Meter(width, height, fraction_elapsed_day, 1, 0, color_fg, color_bg)
+    meter_month = Meter(width, height, fraction_elapsed_month, 1, 0, color_fg, color_bg)
+    meter_year = Meter(width, height, fraction_elapsed_year, 1, 0, color_fg, color_bg)
+    container_elapsed_time = Container(
+        3*width+4*pad, height+2*pad,
+        [meter_day, meter_month, meter_year],
+        border_thickness=0, border_radius=0, border_margin=0,
+        border_color=color_bg, background_color=color_bg, child_padding=pad
+    )
+
+    # Sun path
+    sun_path = sun_path_component.get_surface()
+
+    screen.blit(
+        title.get_surface(),
+        (origin_x, 10)
+    )
+    screen.blit(
+        date.get_surface(),
+        (WIDTH-10-date.width, 10)
+    )
+    screen.blit(
+        status_surface,
+        (WIDTH-status_surface.get_width()-10, date.height + 10)
+    )
+
+    screen.blit(
+        container_weather.get_surface(),
+        (origin_x, origin_y)
+    )
+    screen.blit(
+        forecast_plots.get_surface(),
+        (origin_x + container_weather.width + 15, origin_y)
+    )
+    screen.blit(
+        container_iaq.get_surface(),
+        (origin_x, origin_y + container_weather.height + 10)
+        )
+    screen.blit(
+        iaq_plots.get_surface(),
+        (origin_x + container_iaq.width + 15, origin_y + container_weather.height + 10 + container_iaq.height - iaq_plots.height)
+        )
+    screen.blit(
+        container_elapsed_time.get_surface(),
+        (WIDTH - container_elapsed_time.width - 10, origin_y)
+    )
+    screen.blit(
+        sun_path,
+        (
+            origin_x + container_weather.width + 15,
+            origin_y + forecast_plots.height + 10)
+    )
 
     pygame.draw.rect(screen, color_fg, (WIDTH-100, HEIGHT-100, 100,100), 2)
 

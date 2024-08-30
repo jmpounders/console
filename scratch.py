@@ -1,22 +1,49 @@
-import datetime as dt
 
-from console.data.source import DataSource
-from console.data.weather import make_data_source
-from console.data.iaq import request_data
+import pygame
+import numpy as np
+
+from console.components.base import Meter, Container
+from console.components.composite import SunPath
+
 
 # TODO
-# - Think about interplay between cache and refresh frequency
-# - Fix weather labels
+# - Make a "meter" class
+# - Stack these into a border-less component
 
-request = lambda : dt.datetime.now()
+WIDTH, HEIGHT = 600, 600
 
-source = DataSource("test", request, 10)
-# weather = make_data_source()
+GREEN = 0x0abdc6ff
+BLACK = 0x091833ff
+RED = 0xff0000ff
 
-print(request_data())
+FPS = 4
 
-while True:
-    time_data = source.update()
-    # weather_data = weather.update()
-    print(time_data)
-    pause = input("Press enter to continue")
+# pygame setup
+pygame.init()
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+clock = pygame.time.Clock()
+running = True
+
+color_fg, color_bg = pygame.Color(GREEN), pygame.Color(BLACK)
+
+
+delta_t = 0
+
+sun_path = SunPath(500, GREEN, BLACK, RED, 2, 10)
+
+while running:
+    # poll for events
+    # pygame.QUIT event means the user clicked X to close your window
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    screen.fill(color_bg)
+
+    screen.blit(sun_path.get_surface(), (50, 50))
+
+
+    pygame.display.flip()
+    delta_t = clock.tick(FPS) / 1000
+
+pygame.quit()

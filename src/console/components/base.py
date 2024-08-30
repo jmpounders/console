@@ -203,3 +203,41 @@ class Image(Component):
 
     def get_surface(self):
         return self.image_surface
+
+
+class Meter(Component):
+    """A simple meter component with no padding.
+
+    The meter is filled from the top down.
+    """
+
+    def __init__(
+            self,
+            width: int,
+            height: int,
+            value: float,
+            max_value: float,
+            min_value: float,
+            fg_color: int,
+            bg_color: int,
+        ):
+        super().__init__(width, height)
+
+        self.surface = pygame.Surface((width, height))
+        self.surface.fill(pygame.Color(bg_color))
+
+        value_height = int(height * (value - min_value) / (max_value - min_value))
+        pygame.draw.rect(
+            self.surface,
+            pygame.Color(fg_color),
+            (0, 0, width, value_height)
+        )
+        pygame.draw.rect(
+            self.surface,
+            pygame.Color(fg_color),
+            (0, value_height, width, height-value_height),
+            width=2
+        )
+
+    def get_surface(self):
+        return self.surface
