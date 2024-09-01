@@ -165,8 +165,9 @@ class SunPath(Component):
         base_plot = pygame.Surface((self.width, self.height))
         base_plot.fill(pygame.Color(self.color_bg))
 
+        tick_label_params = {k: v for k, v in self.text_params.items()}
+        tick_label_params['font_size'] = int(self.width/35)
         radial_ticks = list(range(0, 90, 10))
-        polar_ticks = list(range(0, 360, 30))
         for angle in radial_ticks:
             pygame.draw.circle(
                 base_plot,
@@ -174,15 +175,38 @@ class SunPath(Component):
                 (self.ox, self.oy),
                 (90-angle)/90*self.max_radius, width=1
             )
+        radial_tick_marks = list(range(10, 90, 20))
+        for angle in radial_tick_marks:
+            tick_mark = Text(f'{angle}°', **tick_label_params)
+            base_plot.blit(
+                tick_mark.get_surface(),
+                (
+                    self.ox + 1,
+                    self.oy + (90-angle)/90*self.max_radius + 1)
+            )
+
+        polar_ticks = list(range(0, 360, 30))
         for angle in polar_ticks:
             x1 = self.ox + self.max_radius * np.cos(np.deg2rad(angle))
-            y1 = self.oy + self.max_radius * np.sin(np.deg2rad(angle))
+            y1 = self.oy - self.max_radius * np.sin(np.deg2rad(angle))
             pygame.draw.line(
                 base_plot,
                 pygame.Color(self.color_fg),
                 (self.ox, self.oy),
                 (x1, y1),
                 width=1
+            )
+        polar_tick_marks = list(range(30, 360, 30))
+        for angle in polar_tick_marks:
+            if angle % 90 == 0:
+                continue
+            tick_mark = Text(f'{angle}°', **tick_label_params)
+            base_plot.blit(
+                tick_mark.get_surface(),
+                (
+                    self.ox + self.max_radius * np.cos(np.deg2rad(angle+90)) - tick_mark.width//2,
+                    self.oy + self.max_radius * np.sin(np.deg2rad(angle+90)) - tick_mark.height//2
+                )
             )
 
         _, args1, args2 = zip(*solar_params_winter_solstice)
@@ -226,6 +250,8 @@ class SunPath(Component):
             east_label.get_surface(),
             (self.ox - self.max_radius - 10 - east_label.width, self.oy - east_label.height//2)
         )
+
+
 
         pygame.draw.rect(
             base_plot,

@@ -10,7 +10,7 @@ from console.data import fake, weather, iaq
 
 
 # TODO
-# - Make components static rather than recreating each screen
+# - Make it so that solar will not error at night
 # - Add elapsed time meters
 # - Add filler
 #   - NASA API (EONET, EPIC)
