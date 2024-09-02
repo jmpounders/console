@@ -273,13 +273,14 @@ class SunPath(Component):
 
         self.surface.blit(self.base_plot, (0, 0))
 
-        x, y = self.polar_to_screen_coords(altitude_angle_current, azimuth_angle_current)
-        pygame.draw.circle(
-            self.surface,
-            pygame.Color(self.color_highlight),
-            (x, y),
-            self.line_width*3
-        )
+        if now > sunrise and now < sunset:
+            x, y = self.polar_to_screen_coords(altitude_angle_current, azimuth_angle_current)
+            pygame.draw.circle(
+                self.surface,
+                pygame.Color(self.color_highlight),
+                (x, y),
+                self.line_width*3
+            )
 
         _, args1, args2 = zip(*solar_params_today)
         pygame.draw.lines(
