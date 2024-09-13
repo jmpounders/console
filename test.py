@@ -5,7 +5,9 @@ import numpy as np
 import pygame
 
 from console.components.base import Container, Text, Meter
-from console.components.composite import TextInBorder, AnnotatedLinePlots, SunPath
+from console.components.composite import TextInBorder, AnnotatedLinePlots
+from console.components.solar import SunPath
+from console.components.ca import HexCA3
 from console.data import fake, weather, iaq
 
 
@@ -65,9 +67,12 @@ sun_path_component = SunPath(
     500, GREEN, BLACK, RED,
     container_params['border_thickness'], container_params['border_radius']
 )
-
-xx = np.linspace(0, 10, 500)
-yy = np.sin(xx)
+ca_component = HexCA3(
+    50, 40,
+    'beehive',
+    {0: color_fg, 1: RED, 2: 0xaa0000ff},
+    BLACK, GREEN, 10
+)
 
 dt = 0
 
@@ -184,6 +189,9 @@ while running:
     # Sun path
     sun_path = sun_path_component.get_surface()
 
+    # CA
+    cell_aut = ca_component.get_surface()
+
     screen.blit(
         title.get_surface(),
         (origin_x, 10)
@@ -223,8 +231,13 @@ while running:
             origin_x + container_weather.width + 15,
             origin_y + forecast_plots.height + 10)
     )
-
-    pygame.draw.rect(screen, color_fg, (WIDTH-100, HEIGHT-100, 100,100), 2)
+    screen.blit(
+        cell_aut,
+        (
+            origin_x + container_weather.width + 15 + sun_path.get_width() + 20,
+            origin_y
+        )
+    )
 
     # flip() the display to put your work on screen
     pygame.display.flip()
