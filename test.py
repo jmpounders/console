@@ -40,7 +40,7 @@ FONT = config.get('FONT', '3270medium')
 
 # pygame setup
 pygame.init()
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
+screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN | pygame.NOFRAME)
 clock = pygame.time.Clock()
 running = True
 
@@ -72,7 +72,7 @@ sun_path_component = SunPath(
     container_params['border_thickness'], container_params['border_radius']
 )
 ca_component = HexCA3(
-    50, 40,
+    50, 35,
     'spiral',
     {0: GREEN, 1: RED, 2: PURPLE},
     BLACK, GREEN, 10
