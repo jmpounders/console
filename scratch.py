@@ -11,10 +11,10 @@ from console.components.ca import hex_point, get_neighbors, count_hex_states, He
 
 WIDTH, HEIGHT = 600, 600
 
-GREEN = 0x0abdc6ff
-BLACK = 0x091833ff
-RED = 0xff0000ff
-LIGHT_RED = 0xaa0000ff
+GREEN = 0x0abdc6
+BLACK = 0x091833
+RED = 0xea00d9
+LIGHT_RED = 0xea00d9
 
 FPS = 4
 
@@ -23,6 +23,21 @@ pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 running = True
+
+black = (0, 0, 0)
+white = (255, 255, 255, 15)
+val = pygame.Color(*black)
+# pygame.Color()
+screen.fill(val)
+pygame.draw.circle(screen, pygame.Color(*white), (300, 300), 100, 0)
+pygame.display.flip()
+while running:
+    # poll for events
+    # pygame.QUIT event means the user clicked X to close your window
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+exit()
 
 color_fg, color_bg = pygame.Color(GREEN), pygame.Color(BLACK)
 

@@ -1,8 +1,8 @@
 import logging
 from datetime import datetime
-import numpy as np
 
 import pygame
+from dotenv import dotenv_values
 
 from console.components.base import Container, Text, Meter
 from console.components.composite import TextInBorder, AnnotatedLinePlots
@@ -16,7 +16,6 @@ from console.data import fake, weather, iaq
 # - Add elapsed time meters
 # - Add filler
 #   - NASA API (EONET, EPIC)
-#   - Game of life
 #   - L system
 #   - Lorenz attractor
 
@@ -24,13 +23,18 @@ from console.data import fake, weather, iaq
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+config = dotenv_values(".env")
+
 WIDTH, HEIGHT = 1920, 1080
 
-GREEN = 0x0abdc6ff
-BLACK = 0x091833ff
-RED = 0xff0000ff
+GREEN = (10,189,198)
+BLACK = (9,24,51)
+BLUE = (19,62,124)
+RED = (234,0,217)
+PURPLE = (113,28,145)
 
-FPS = 4
+FPS = int(config.get('FPS', 4))
+FONT = config.get('FONT', '3270medium')
 
 # print(pygame.font.get_fonts())
 
@@ -40,10 +44,10 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 running = True
 
-color_fg, color_bg = pygame.Color(GREEN), pygame.Color(BLACK)
+color_fg, color_bg = pygame.Color(*GREEN), pygame.Color(*BLACK)
 
 text_params = {
-    'font_name': '3270medium',
+    'font_name': FONT,
     'font_size': 32,
     'font_color': GREEN,
     'font_background': BLACK,
@@ -69,8 +73,8 @@ sun_path_component = SunPath(
 )
 ca_component = HexCA3(
     50, 40,
-    'beehive',
-    {0: color_fg, 1: RED, 2: 0xaa0000ff},
+    'spiral',
+    {0: GREEN, 1: RED, 2: PURPLE},
     BLACK, GREEN, 10
 )
 
@@ -82,6 +86,12 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_q:
+                running = False
+            elif event.key == pygame.K_r:
+                ca_component.reinitialize()
+
 
     # update data sources
     weather_data = weather_data_source.update()
@@ -92,7 +102,7 @@ while running:
 
     # Make title
     params = {
-        'font_name': '3270medium',
+        'font_name': FONT,
         'font_size': 56,
         'font_color': GREEN,
         'font_background': BLACK,
@@ -111,7 +121,7 @@ while running:
     status_surface = pygame.Surface((len(data_source_status) * 30, 30))
     status_surface.fill(color_bg)
     for i, status in enumerate(data_source_status):
-        color = pygame.Color(GREEN) if status == 'idle' else pygame.Color(RED)
+        color = pygame.Color(*GREEN) if status == 'idle' else pygame.Color(*RED)
         indicaor = pygame.draw.rect(status_surface, color, (5 + 30 * i, 5, 20, 20))
 
     # Offset to start of main dashboard

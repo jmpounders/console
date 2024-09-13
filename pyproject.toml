@@ -22,5 +22,6 @@ dependencies = [
   "numpy>=2.1",
   "openmeteo_sdk>=1.4.0",
   "pygame",
+  "python-dotenv",
   "httpx",
 ]

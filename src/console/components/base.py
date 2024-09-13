@@ -37,10 +37,10 @@ class Container(Component):
         self.children = children
 
         self.surface = pygame.Surface((width, height))
-        self.surface.fill(pygame.Color(background_color))
+        self.surface.fill(pygame.Color(*background_color))
         pygame.draw.rect(
             self.surface,
-            pygame.Color(border_color),
+            pygame.Color(*border_color),
             (border_margin, border_margin, width-border_margin, height-border_margin),
             border_radius=border_radius,
             width=border_thickness
@@ -75,7 +75,7 @@ class VStack(Component):
         self.children = children
 
         self.surface = pygame.Surface((width, height))
-        self.surface.fill(pygame.Color(background_color))
+        self.surface.fill(pygame.Color(*background_color))
 
     def get_surface(self):
         place_x, place_y = 0, 0
@@ -99,8 +99,8 @@ class Text(Component):
         ):
         self.text = text
         self.font = pygame.font.SysFont(font_name, font_size)
-        self.font_color = pygame.Color(font_color)
-        self.font_background = pygame.Color(font_background)
+        self.font_color = pygame.Color(*font_color)
+        self.font_background = pygame.Color(*font_background)
 
         self.surface = self.font.render(self.text, True, self.font_color, self.font_background)
 
@@ -132,7 +132,7 @@ class LinePlot(Component):
         self.fg_color = fg_color
 
         self.surface = pygame.Surface((width, height))
-        self.surface.fill(pygame.Color(bg_color))
+        self.surface.fill(pygame.Color(*bg_color))
 
         if len(x_data) == 0 or len(y_data) == 0:
             return
@@ -164,14 +164,14 @@ class LinePlot(Component):
     def __draw_axes(self, y_location: float):
         pygame.draw.line(
             self.surface,
-            pygame.Color(self.fg_color),
+            pygame.Color(*self.fg_color),
             (self.x0, self.y0),
             (self.x0, self.y1),
             1
         )
         pygame.draw.line(
             self.surface,
-            pygame.Color(self.fg_color),
+            pygame.Color(*self.fg_color),
             (self.x0, y_location),
             (self.x1, y_location),
             1
@@ -182,7 +182,7 @@ class LinePlot(Component):
         for xi, yi in zip(x_data[1:], y_data[1:]):
             px = self.__scale_x(xi)
             py = self.__scale_y(yi)
-            pygame.draw.line(self.surface, pygame.Color(self.fg_color), (px0, py0), (px, py), 1)
+            pygame.draw.line(self.surface, pygame.Color(*self.fg_color), (px0, py0), (px, py), 1)
             px0, py0 = px, py
 
     def get_surface(self):
@@ -224,17 +224,17 @@ class Meter(Component):
         super().__init__(width, height)
 
         self.surface = pygame.Surface((width, height))
-        self.surface.fill(pygame.Color(bg_color))
+        self.surface.fill(pygame.Color(*bg_color))
 
         value_height = int(height * (value - min_value) / (max_value - min_value))
         pygame.draw.rect(
             self.surface,
-            pygame.Color(fg_color),
+            pygame.Color(*fg_color),
             (0, 0, width, value_height)
         )
         pygame.draw.rect(
             self.surface,
-            pygame.Color(fg_color),
+            pygame.Color(*fg_color),
             (0, value_height, width, height-value_height),
             width=2
         )

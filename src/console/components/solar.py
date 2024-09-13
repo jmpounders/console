@@ -141,7 +141,7 @@ class SunPath(Component):
         }
 
         self.surface = pygame.Surface((width, width))
-        self.surface.fill(pygame.Color(color_bg))
+        self.surface.fill(pygame.Color(*color_bg))
 
         margin = 50
         self.ox, self.oy = width//2, width//2
@@ -167,7 +167,7 @@ class SunPath(Component):
         solar_params_summer_solstice = get_sun_path(summer_solstice)
 
         base_plot = pygame.Surface((self.width, self.height))
-        base_plot.fill(pygame.Color(self.color_bg))
+        base_plot.fill(pygame.Color(*self.color_bg))
 
         tick_label_params = {k: v for k, v in self.text_params.items()}
         tick_label_params['font_size'] = int(self.width/35)
@@ -175,7 +175,7 @@ class SunPath(Component):
         for angle in radial_ticks:
             pygame.draw.circle(
                 base_plot,
-                pygame.Color(self.color_fg),
+                pygame.Color(*self.color_fg),
                 (self.ox, self.oy),
                 (90-angle)/90*self.max_radius, width=1
             )
@@ -195,7 +195,7 @@ class SunPath(Component):
             y1 = self.oy - self.max_radius * np.sin(np.deg2rad(angle))
             pygame.draw.line(
                 base_plot,
-                pygame.Color(self.color_fg),
+                pygame.Color(*self.color_fg),
                 (self.ox, self.oy),
                 (x1, y1),
                 width=1
@@ -216,7 +216,7 @@ class SunPath(Component):
         _, args1, args2 = zip(*solar_params_winter_solstice)
         pygame.draw.lines(
             base_plot,
-            pygame.Color(self.color_fg),
+            pygame.Color(*self.color_fg),
             False,
             tuple(map(self.polar_to_screen_coords, args1, args2)),
             width=self.line_width
@@ -225,7 +225,7 @@ class SunPath(Component):
         _, args1, args2 = zip(*solar_params_summer_solstice)
         pygame.draw.lines(
             base_plot,
-            pygame.Color(self.color_fg),
+            pygame.Color(*self.color_fg),
             False,
             tuple(map(self.polar_to_screen_coords, args1, args2)),
             width=self.line_width
@@ -257,7 +257,7 @@ class SunPath(Component):
 
         pygame.draw.rect(
             base_plot,
-            pygame.Color(self.color_fg),
+            pygame.Color(*self.color_fg),
             (0, 0, self.width, self.width),
             width=self.border_thickness,
             border_radius=self.border_radius
@@ -279,7 +279,7 @@ class SunPath(Component):
             x, y = self.polar_to_screen_coords(altitude_angle_current, azimuth_angle_current)
             pygame.draw.circle(
                 self.surface,
-                pygame.Color(self.color_highlight),
+                pygame.Color(*self.color_highlight),
                 (x, y),
                 self.line_width*3
             )
@@ -287,7 +287,7 @@ class SunPath(Component):
         _, args1, args2 = zip(*solar_params_today)
         pygame.draw.lines(
             self.surface,
-            pygame.Color(self.color_highlight),
+            pygame.Color(*self.color_highlight),
             False,
             tuple(map(self.polar_to_screen_coords, args1, args2)),
             width=self.line_width

@@ -202,12 +202,16 @@ class HexCA3(Component):
         self.neighbors = get_neighbors(num_rows, num_cols)
         self.__initialize()
 
-    def __initialize(self):
+    def __initialize(self, rules: str = 'spiral'):
+        self.rules, self.neighbors_include_self = RULES[rules](self.state_values)
         self.hex_states = [
             random.choices(self.state_values, weights=(10, 1, 1), k=1)[0]
             for _ in range(self.num_hexes)
         ]
         self.entropy_history = []
+
+    def reinitialize(self):
+        self.__initialize()
 
     def __draw_hexes(self):
         index = -1
@@ -223,7 +227,7 @@ class HexCA3(Component):
                 width = 1 if fill == self.state_values[0] else 0
                 pygame.draw.polygon(
                     self.surface,
-                    pygame.Color(self.colormap[self.hex_states[index]]),
+                    pygame.Color(*self.colormap[self.hex_states[index]]),
                     hex_points,
                     width=width
                 )
@@ -239,7 +243,7 @@ class HexCA3(Component):
                 width = 1 if fill == self.state_values[0] else 0
                 pygame.draw.polygon(
                     self.surface,
-                    pygame.Color(self.colormap[self.hex_states[index]]),
+                    pygame.Color(*self.colormap[self.hex_states[index]]),
                     hex_points,
                     width=width
                 )
@@ -269,7 +273,7 @@ class HexCA3(Component):
             self.entropy_history = self.entropy_history[-50:]
 
         # draw everything
-        self.surface.fill(pygame.Color(self.color_bg))
+        self.surface.fill(pygame.Color(*self.color_bg))
         self.__draw_hexes()
         if len(self.entropy_history) > 2:
             plot = LinePlot(
