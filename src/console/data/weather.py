@@ -99,8 +99,12 @@ def request_data() -> dict[str, Any]:
         "precipitation_unit": "inch",
         "timezone": "America/New_York",
         "forecast_days": 3,
-        }
-    response = weather_api(BASE_URL, params=params)[0]
+    }
+    try:
+        response = weather_api(BASE_URL, params=params)[0]
+    except Exception as e:
+        print(f"Error: {e}")
+        return {}
 
     output = {}
 

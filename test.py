@@ -12,8 +12,9 @@ from console.data import fake, weather, iaq
 
 
 # TODO
-# - Make it so that solar will not error at night
 # - Add elapsed time meters
+# - Catch timeout exceptions in data sources
+# - Add an update time to the data sources
 # - Add filler
 #   - NASA API (EONET, EPIC)
 #   - L system

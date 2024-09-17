@@ -55,7 +55,10 @@ DATA_LABELS = {
 }
 
 def request_data() -> dict[str, Any]:
-    response = httpx.get(BASE_URL + '/measures/current')
+    try:
+        response = httpx.get(BASE_URL + '/measures/current')
+    except httpx.TimeoutException:
+        return {}
 
     output = {}
     for variable in VARIABLES:

@@ -54,17 +54,20 @@ class DataSource:
         if needs_refresh and self.status == 'idle':
             REQUEST_POOL.submit(self.name, self.request_func)
             self.status = 'pending'
-            # self.data = self.request_func()
 
         if self.status == 'pending':
             response = REQUEST_POOL.get_result(self.name)
+            # Response of None implies no new data
+            # Response of {} implies an error
             if response is not None:
-                self.data = response
-                self.last_update = dt.datetime.now(dt.UTC)
                 self.status = 'idle'
+                if len(response) > 0:
+                    self.data = response
+                    self.last_update = dt.datetime.now(dt.UTC)
+                    self.status = 'idle'
 
-                self.history.append((dt.datetime.now(dt.UTC), self.data))
-                if len(self.history) > self.max_history_len:
-                    self.history.pop(0)
+                    self.history.append((dt.datetime.now(dt.UTC), self.data))
+                    if len(self.history) > self.max_history_len:
+                        self.history.pop(0)
 
         return self.data
