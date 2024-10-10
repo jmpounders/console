@@ -65,7 +65,8 @@ def request_data() -> dict[str, Any]:
         output[DATA_LABELS[variable]] = response.json().get(variable, 'NULL')
 
     # Reading is in Celsius, convert to Fahrenheit
-    output['Temperature [F]'] = output['Temperature [F]'] * 9/5 + 32
+    if output['Temperature [F]'] != 'NULL':
+        output['Temperature [F]'] = output['Temperature [F]'] * 9/5 + 32
 
     return output
 
